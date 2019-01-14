@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="  
+           http://www.springframework.org/schema/beans  
+           http://www.springframework.org/schema/beans/spring-beans-4.0.xsd  
+           http://www.springframework.org/schema/aop  
+           http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+           http://www.springframework.org/schema/context  
+           http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+     
+     <!-- 自动扫描注解的bean -->
+	<context:component-scan base-package="com.yixian.ssm.service" />
+	
+     <!-- 引入properties配置文件 -->  
+   <bean id="propertyConfigurer"
+        class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="locations">
+            <list>
+                <value>classpath:conf/jdbc.properties</value>
+                <value>classpath:conf/mail.properties</value>
+            </list>
+        </property>
+    </bean>
+    
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<!-- 不使用properties来配置 -->
+		<!-- <property name="driverClassName" value="com.mysql.jdbc.Driver" /> 
+			<property name="url" value="jdbc:mysql://localhost:3306/db_shop" /> 
+			<property name="username" value="root" /> 
+			<property name="password" value="123456" /> -->
+	   <!-- 使用properties来配置 -->
+		<property name="driverClassName">
+			<value>${jdbc_driverClassName}</value>
+		</property>
+		<property name="url">
+			<value>${jdbc_url}</value>
+		</property>
+		<property name="username">
+			<value>${jdbc_username}</value>
+		</property>
+		<property name="password">
+			<value>${jdbc_password}</value>
+		</property>
+	</bean>
+ 
+	<!-- 自动扫描了所有的XxxxMapper.xml对应的mapper接口文件，这样就不用一个一个手动配置Mpper的映射了，只要Mapper接口类和Mapper映射文件对应起来就可以了。 -->
+	<bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.yixian.ssm.mapper" />
+	</bean>
+ 
+    <!-- 配置Mybatis的文件 ，mapperLocations配置**Mapper.xml文件位置，configLocation配置mybatis-config文件位置-->
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+        <property name="mapperLocations" value="classpath*:com/yixian/ssm/mapper/*.xml"/>  
+		<property name="configLocation" value="classpath:conf/mybatis-config.xml" />
+		<!-- <property name="typeAliasesPackage" value="com.tiantian.ckeditor.model" /> -->
+	</bean>
+ 
+ 	<!-- 线程池配置 -->
+    <bean id="taskExecutor" class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+        <!-- 线程池维护线程的最少数量 -->
+        <property name="corePoolSize" value="5"/>
+        <!-- 线程池维护线程所允许的空闲时间 -->
+        <property name="keepAliveSeconds" value="30000"/>
+        <!-- 线程池维护线程的最大数量 -->
+        <property name="maxPoolSize" value="100"/>
+        <!-- 线程池所使用的缓冲队列 -->
+        <property name="queueCapacity" value="200"/>
+    </bean>
+
+	<!-- 邮件发送服务 -->
+	<bean id="mailSender" class="org.springframework.mail.javamail.JavaMailSenderImpl">
+		<!-- 使用smtp：简单邮件传输协议 -->
+		<property name="protocol" value="${mail.protocol}"/>
+		<!-- 发送者邮箱地址 -->
+		<property name="host" value="${mail.host}" />
+		<!-- 服务端口 -->
+		<property name="port" value="${mail.port}"></property>
+		<!-- 邮箱用户名 -->
+		<property name="username" value="${mail.username}" />
+		<!-- 邮箱第三方授权码 -->
+		<property name="password" value="${mail.password}" />
+		<!-- 默认编码 -->
+		<property name="defaultEncoding" value="UTF-8"></property>
+		<!-- 邮件发送属性 -->
+		<property name="javaMailProperties">
+			<props>
+				<!-- 是否要求身份认证 -->
+				<prop key="mail.smtp.auth">${mail.smtp.auth}</prop>
+				<!-- 发送超时时间，单位毫秒 -->
+				<prop key="mail.smtp.timeout">${mail.smtp.timeout}</prop>
+				<!--要求的ssl连接-->
+			</props>
+		</property>
+	</bean>
+
+	<!-- 配置FreeMarker-->
+	<bean id="freeMarkerConfigurer" class="org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer">
+		<!-- 指定模板文件路径 -->
+		<property name="templateLoaderPath" value="classpath:MATA-INF/resources/pages/ftl/"></property>
+		<!-- 设置freekMarker环境变量 -->
+		<property name="freemarkerSettings">
+			<props>
+				<!-- 刷新模板的周期，单位为秒 -->
+				<prop key="template_update_delay">1800</prop>
+				<!-- 模板的编码格式 -->
+				<prop key="default_encoding">UTF-8</prop>
+				<!-- 本地化设置 -->
+				<prop key="locale">zh_CN</prop>
+			</props>
+		</property>
+	</bean>
+	
+</beans>
